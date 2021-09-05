@@ -163,6 +163,31 @@ fi
 S3_URL_BASE="https://$BINARY_BUCKET_NAME.s3.$BINARY_BUCKET_REGION.$S3_DOMAIN/$KUBERNETES_VERSION/$KUBERNETES_BUILD_DATE/bin/linux/$ARCH"
 S3_PATH="s3://$BINARY_BUCKET_NAME/$KUBERNETES_VERSION/$KUBERNETES_BUILD_DATE/bin/linux/$ARCH"
 
+######################## custom shell start ########################
+
+export ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account)
+export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+
+/usr/local/bin/aws --version
+aws sts get-caller-identity
+
+/usr/local/bin/aws configure set default.region ${AWS_REGION}
+/usr/local/bin/aws configure get default.region
+
+/usr/local/bin/aws ecr get-login-password --region cn-northwest-1 | sudo docker login --username AWS --password-stdin [account id].dkr.ecr.cn-northwest-1.amazonaws.com.cn
+echo "start docker"
+sudo systemctl start docker
+echo "pull image"
+sudo docker pull [account id].dkr.ecr.cn-northwest-1.amazonaws.com.cn/hello-world:latest
+echo "docker stop"
+sudo systemctl stop docker
+
+######################## custom shell start ########################
+
 BINARIES=(
     kubelet
     aws-iam-authenticator
